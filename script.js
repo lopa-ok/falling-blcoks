@@ -106,31 +106,17 @@ Events.on(engine, 'collisionStart', event => {
             const newColor = bodyA.render.fillStyle;
 
             
-            const newSize = (Math.sqrt(bodyA.area) + Math.sqrt(bodyB.area)) / 2;
+            const sizeA = bodyA.circleRadius ? bodyA.circleRadius * 2 : bodyA.bounds.max.x - bodyA.bounds.min.x;
+            const sizeB = bodyB.circleRadius ? bodyB.circleRadius * 2 : bodyB.bounds.max.x - bodyB.bounds.min.x;
+            const sizeFactor = 0.5; 
+            const newSize = (sizeA + sizeB) * sizeFactor; 
             const newX = (bodyA.position.x + bodyB.position.x) / 2;
             const newY = (bodyA.position.y + bodyB.position.y) / 2;
 
             
             let newShape;
-            if (bodyA.circleRadius && !bodyB.circleRadius) {
-                
-                newShape = Bodies.polygon(newX, newY, 6, newSize / 2, {
-                    render: {
-                        fillStyle: newColor
-                    },
-                    restitution: 0.8, 
-                    friction: 0.1
-                });
-            } else if (!bodyA.circleRadius && bodyB.circleRadius) {
-                
-                newShape = Bodies.polygon(newX, newY, 6, newSize / 2, {
-                    render: {
-                        fillStyle: newColor
-                    },
-                    restitution: 0.8, 
-                    friction: 0.1
-                });
-            } else if (bodyA.circleRadius && bodyB.circleRadius) {
+
+            if (bodyA.circleRadius && bodyB.circleRadius) {
                 
                 newShape = Bodies.circle(newX, newY, newSize / 2, {
                     render: {
@@ -139,9 +125,77 @@ Events.on(engine, 'collisionStart', event => {
                     restitution: 0.8, 
                     friction: 0.1
                 });
-            } else {
+            } else if (bodyA.label === 'Rectangle Body' && bodyB.label === 'Rectangle Body') {
                 
                 newShape = Bodies.rectangle(newX, newY, newSize, newSize, {
+                    render: {
+                        fillStyle: newColor
+                    },
+                    restitution: 0.8, 
+                    friction: 0.1
+                });
+            } else if (bodyA.circleRadius && bodyB.label === 'Rectangle Body') {
+                
+                newShape = Bodies.polygon(newX, newY, 6, newSize / 2, {
+                    render: {
+                        fillStyle: newColor
+                    },
+                    restitution: 0.8, 
+                    friction: 0.1
+                });
+            } else if (bodyB.circleRadius && bodyA.label === 'Rectangle Body') {
+                
+                newShape = Bodies.polygon(newX, newY, 6, newSize / 2, {
+                    render: {
+                        fillStyle: newColor
+                    },
+                    restitution: 0.8, 
+                    friction: 0.1
+                });
+            } else if (bodyA.label === 'Polygon Body' && bodyB.circleRadius) {
+                
+                const sides = Math.max(bodyA.vertices.length - 1, 3); 
+                newShape = Bodies.polygon(newX, newY, sides, newSize / 2, {
+                    render: {
+                        fillStyle: newColor
+                    },
+                    restitution: 0.8, 
+                    friction: 0.1
+                });
+            } else if (bodyB.label === 'Polygon Body' && bodyA.circleRadius) {
+                
+                const sides = Math.max(bodyB.vertices.length - 1, 3); 
+                newShape = Bodies.polygon(newX, newY, sides, newSize / 2, {
+                    render: {
+                        fillStyle: newColor
+                    },
+                    restitution: 0.8, 
+                    friction: 0.1
+                });
+            } else if (bodyA.label === 'Polygon Body' && bodyB.label === 'Rectangle Body') {
+                
+                const sides = bodyA.vertices.length + 1;
+                newShape = Bodies.polygon(newX, newY, sides, newSize / 2, {
+                    render: {
+                        fillStyle: newColor
+                    },
+                    restitution: 0.8, 
+                    friction: 0.1
+                });
+            } else if (bodyB.label === 'Polygon Body' && bodyA.label === 'Rectangle Body') {
+                
+                const sides = bodyB.vertices.length + 1;
+                newShape = Bodies.polygon(newX, newY, sides, newSize / 2, {
+                    render: {
+                        fillStyle: newColor
+                    },
+                    restitution: 0.8, 
+                    friction: 0.1
+                });
+            } else if (bodyA.label === 'Polygon Body' && bodyB.label === 'Polygon Body') {
+                
+                const newSides = Math.min(bodyA.vertices.length + bodyB.vertices.length, 20); 
+                newShape = Bodies.polygon(newX, newY, newSides, newSize / 2, {
                     render: {
                         fillStyle: newColor
                     },
