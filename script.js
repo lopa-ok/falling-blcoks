@@ -1,39 +1,85 @@
-function createRandomShape() {
-    const shape = document.createElement('div');
-    const size = Math.random() * 50 + 20; // Size between 20 and 70
-    const xPos = Math.random() * window.innerWidth;
+const Engine = Matter.Engine,
+    Render = Matter.Render,
+    World = Matter.World,
+    Bodies = Matter.Bodies,
+    Mouse = Matter.Mouse,
+    MouseConstraint = Matter.MouseConstraint,
+    Body = Matter.Body,
+    Events = Matter.Events;
 
-    shape.style.width = `${size}px`;
-    shape.style.height = `${size}px`;
-    shape.style.position = 'absolute';
-    shape.style.left = `${xPos}px`;
-    shape.style.top = '-50px'; // Start above the screen
+const engine = Engine.create();
+const world = engine.world;
 
-    const colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A6', '#F3FF33'];
-    shape.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-
-    // Randomly assign a shape type
-    if (Math.random() > 0.5) {
-        shape.style.borderRadius = '50%'; // Circle
-    } else {
-        shape.style.borderRadius = '0'; // Square
+const render = Render.create({
+    element: document.getElementById('container'),
+    engine: engine,
+    options: {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        wireframes: false,
+        background: '#282c34'
     }
+});
 
-    document.getElementById('container').appendChild(shape);
 
-    let fallSpeed = Math.random() * 3 + 2; // Speed between 2 and 5
-    function fall() {
-        const currentTop = parseFloat(shape.style.top);
-        shape.style.top = `${currentTop + fallSpeed}px`;
+Engine.run(engine);
 
-        if (currentTop < window.innerHeight) {
-            requestAnimationFrame(fall);
-        } else {
-            shape.remove();
+
+Render.run(render);
+
+
+const ground = Bodies.rectangle(window.innerWidth / 2, window.innerHeight + 10, window.innerWidth, 20, { 
+    isStatic: true,
+    render: {
+        fillStyle: '#ffffff'
+    }
+});
+World.add(world, ground);
+
+
+const mouse = Mouse.create(render.canvas);
+const mouseConstraint = MouseConstraint.create(engine, {
+    mouse: mouse,
+    constraint: {
+        stiffness: 0.2,
+        render: {
+            visible: false
         }
     }
+});
+World.add(world, mouseConstraint);
 
-    requestAnimationFrame(fall);
+
+render.mouse = mouse;
+
+function createRandomShape() {
+    const size = Math.random() * 50 + 20; 
+    const xPos = Math.random() * window.innerWidth;
+
+    const colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A6', '#F3FF33'];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+
+    
+    let shape;
+    if (Math.random() > 0.5) {
+        shape = Bodies.circle(xPos, -50, size / 2, {
+            render: {
+                fillStyle: color
+            },
+            restitution: 0.8, 
+            friction: 0.1
+        });
+    } else {
+        shape = Bodies.rectangle(xPos, -50, size, size, {
+            render: {
+                fillStyle: color
+            },
+            restitution: 0.8, 
+            friction: 0.1
+        });
+    }
+
+    World.add(world, shape);
 }
 
 function generateShapes() {
