@@ -4,7 +4,6 @@ const Engine = Matter.Engine,
     Bodies = Matter.Bodies,
     Mouse = Matter.Mouse,
     MouseConstraint = Matter.MouseConstraint,
-    Body = Matter.Body,
     Events = Matter.Events;
 
 const engine = Engine.create();
@@ -52,6 +51,9 @@ World.add(world, mouseConstraint);
 
 render.mouse = mouse;
 
+let shapeCount = 0;
+const shapes = [];
+
 function createRandomShape() {
     const size = Math.random() * 50 + 20; 
     const xPos = Math.random() * window.innerWidth;
@@ -80,6 +82,11 @@ function createRandomShape() {
     }
 
     World.add(world, shape);
+    shapes.push(shape);
+
+    
+    shapeCount++;
+    document.getElementById('shapes-counter').innerText = `Shapes: ${shapeCount}`;
 }
 
 function generateShapes() {
@@ -87,4 +94,78 @@ function generateShapes() {
     setTimeout(generateShapes, Math.random() * 1000);
 }
 
-generateShapes();
+
+Events.on(engine, 'collisionStart', event => {
+    const pairs = event.pairs;
+
+    for (let i = 0; i < pairs.length; i++) {
+        const bodyA = pairs[i].bodyA;
+        const bodyB = pairs[i].bodyB;
+
+        if (bodyA.render.fillStyle === bodyB.render.fillStyle) {
+            const newColor = bodyA.render.fillStyle;
+
+            
+            const newSize = (Math.sqrt(bodyA.area) + Math.sqrt(bodyB.area)) / 2;
+            const newX = (bodyA.position.x + bodyB.position.x) / 2;
+            const newY = (bodyA.position.y + bodyB.position.y) / 2;
+
+            
+            let newShape;
+            if (bodyA.circleRadius && !bodyB.circleRadius) {
+                
+                newShape = Bodies.polygon(newX, newY, 6, newSize / 2, {
+                    render: {
+                        fillStyle: newColor
+                    },
+                    restitution: 0.8, 
+                    friction: 0.1
+                });
+            } else if (!bodyA.circleRadius && bodyB.circleRadius) {
+                
+                newShape = Bodies.polygon(newX, newY, 6, newSize / 2, {
+                    render: {
+                        fillStyle: newColor
+                    },
+                    restitution: 0.8, 
+                    friction: 0.1
+                });
+            } else if (bodyA.circleRadius && bodyB.circleRadius) {
+                
+                newShape = Bodies.circle(newX, newY, newSize / 2, {
+                    render: {
+                        fillStyle: newColor
+                    },
+                    restitution: 0.8, 
+                    friction: 0.1
+                });
+            } else {
+                
+                newShape = Bodies.rectangle(newX, newY, newSize, newSize, {
+                    render: {
+                        fillStyle: newColor
+                    },
+                    restitution: 0.8, 
+                    friction: 0.1
+                });
+            }
+
+            World.add(world, newShape);
+            World.remove(world, bodyA);
+            World.remove(world, bodyB);
+            shapes.splice(shapes.indexOf(bodyA), 1);
+            shapes.splice(shapes.indexOf(bodyB), 1);
+            shapes.push(newShape);
+
+            
+            shapeCount--;
+            document.getElementById('shapes-counter').innerText = `Shapes: ${shapeCount}`;
+        }
+    }
+});
+
+
+setTimeout(() => {
+    document.getElementById('overlay').style.display = 'none';
+    generateShapes();
+}, 1000);
